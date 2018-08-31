@@ -23,13 +23,38 @@ Now the users can use your monad without lambda and dot chaining (e.g. `x.flatMa
 they can use @bind to bind the result of each monadic application, e.g.:
 
     private static Either<String, Double> solveQuadratic(final String equation) {
-        @bind String[] mx = parseRegex("^([\\+\\-\\.0-9]+)x\\^2([\\+\\-\\.0-9]+)x([\\+\\-\\.0-9]+)$", equation.replace(" ", "")).get();
+        @bind String[] mx = parseRegex(MY_REGEX, equation).get();
         @bind Double a = parseDouble(mx[1]).get();
         @bind Double b = parseDouble(mx[2]).get();
         @bind Double c = parseDouble(mx[3]).get();
         return solveQuadratic(a, b, c).toEither("I don't know the imaginary numbers!");
     }
 
+The bind expansion work from:
+
+  @bind T x = m.k();
+  BLOCK;
+  return w;
+
+where
+
+  - T is the type into the monad.
+  - x is the variable definition.
+  - m is some monad expression.
+  - k is the `BindTo` getter.
+  - BLOCK is any internal code.
+  - w is the monadic result.
+
+This will be expanded to:
+
+  return m.k'((T x) -> {
+    BLOCK;
+    return w;
+  });
+
+where
+
+  - k' is the `BindTo` method of k
 
 ========================
 
@@ -43,9 +68,9 @@ ant -projecthelp
 
 HINT: If you'd like to develop lombok in eclipse, run 'ant eclipse' first. It creates the necessary project infrastructure and downloads dependencies. Note that, in order to run "LombokizedEclipse.launch", you need to have "Eclipse SDK" installed.
 
-For a list of all authors, see the AUTHORS file. 
+For a list of all authors, see the AUTHORS file.
 
-Project Lombok was started by: 
+Project Lombok was started by:
 
 Reinier Zwitserloot
 twitter: @surial
