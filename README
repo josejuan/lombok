@@ -1,3 +1,38 @@
+This is a dirty fork to play with a proof of concept about do notation for java.
+
+The unique files added (no changes was maded to lombok itself) are:
+
+* src/core/lombok/BindTo.java
+* src/core/lombok/bind.java
+* src/core/lombok/javac/handlers/HandleBind.java
+
+Quick explanation:
+
+Let M some class with a monadic operation (e.g. flatMap for Optional o Stream):
+
+    M<B> flatMap(Function<A, M<B>> k) {...
+
+Then, you can annotate one getter of M as:
+
+    @BindTo(method = "flatMap")
+    T get() {
+        throw new IllegalStateException("this method should be erased at compiled (lombok) time");
+    }
+
+Now the users can use your monad without lambda and dot chaining (e.g. `x.flatMap(y -> y.flatMap(...`),
+they can use @bind to bind the result of each monadic application, e.g.:
+
+    private static Either<String, Double> solveQuadratic(final String equation) {
+        @bind String[] mx = parseRegex("^([\\+\\-\\.0-9]+)x\\^2([\\+\\-\\.0-9]+)x([\\+\\-\\.0-9]+)$", equation.replace(" ", "")).get();
+        @bind Double a = parseDouble(mx[1]).get();
+        @bind Double b = parseDouble(mx[2]).get();
+        @bind Double c = parseDouble(mx[3]).get();
+        return solveQuadratic(a, b, c).toEither("I don't know the imaginary numbers!");
+    }
+
+
+========================
+
 Project Lombok makes java a spicier language by adding 'handlers' that know how to build and compile simple, boilerplate-free, not-quite-java code.
 See LICENSE for the Project Lombok license.
 
